@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Даня — Мастер Игры</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c67ecf;
+    --gold-light: #9a2ce4;
+    --gold-dim: #46059b;
+    --parchment: #f4ead5;
+    --ink: #1a1208;
+    --blood: #8b1a1a;
+    --shadow: rgba(0,0,0,0.7);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0d0a05;
+    font-family: 'Crimson Pro', Georgia, serif;
+    color: var(--parchment);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Starfield background */
+  .starfield {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(100,60,10,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 90%, rgba(80,20,20,0.15) 0%, transparent 50%),
+      #0d0a05;
+  }
+  .starfield::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 15% 25%, rgba(255,220,120,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 10%, rgba(255,240,180,0.5) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 70% 40%, rgba(255,220,100,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 15%, rgba(255,240,200,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 70%, rgba(255,220,150,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 80%, rgba(255,240,180,0.5) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 90% 60%, rgba(255,210,100,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 10% 60%, rgba(255,240,200,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 90%, rgba(255,220,120,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 50%, rgba(255,240,180,0.4) 0%, transparent 100%);
+  }
+
+  /* Decorative border frame */
+  .page-frame {
+    position: fixed;
+    inset: 16px;
+    border: 1px solid rgba(201,168,76,0.2);
+    pointer-events: none;
+    z-index: 10;
+  }
+  .page-frame::before, .page-frame::after {
+    content: '✦';
+    position: absolute;
+    font-size: 18px;
+    color: var(--gold);
+    opacity: 0.5;
+  }
+  .page-frame::before { top: -10px; left: 50%; transform: translateX(-50%); }
+  .page-frame::after  { bottom: -10px; left: 50%; transform: translateX(-50%); }
+
+  /* Main wrapper */
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 60px 24px 80px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    margin-bottom: 52px;
+    animation: fadeDown 0.9s ease both;
+  }
+
+  .role-badge {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    padding: 5px 16px;
+    margin-bottom: 28px;
+    position: relative;
+  }
+  .role-badge::before, .role-badge::after {
+    content: '◆';
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    color: var(--gold);
+    font-size: 8px;
+  }
+  .role-badge::before { left: -10px; }
+  .role-badge::after  { right: -10px; }
+
+  .avatar-ring {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 20px;
+    position: relative;
+  }
+  .avatar-ring svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    animation: rotateSlow 30s linear infinite;
+  }
+  .avatar-inner {
+    position: absolute;
+    inset: 12px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #3d2a0e, #1a0d03);
+    border: 1px solid var(--gold-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    overflow: hidden;
+  }
+
+  .name {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(36px, 8vw, 56px);
+    font-weight: 900;
+    letter-spacing: 4px;
+    line-height: 1;
+    background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dim) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+  }
+  .name-sub {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 6px;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 32px 0;
+  }
+  .divider-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+  }
+  .divider-icon {
+    color: var(--gold);
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  /* ── SECTION ── */
+  .section {
+    margin-bottom: 40px;
+    animation: fadeUp 0.8s ease both;
+  }
+  .section:nth-child(2) { animation-delay: 0.15s; }
+  .section:nth-child(3) { animation-delay: 0.25s; }
+  .section:nth-child(4) { animation-delay: 0.35s; }
+  .section:nth-child(5) { animation-delay: 0.45s; }
+
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--gold-dim), transparent);
+  }
+
+  /* ── INTRO TEXT ── */
+  .intro-text {
+    font-size: 18px;
+    line-height: 1.75;
+    color: rgba(244,234,213,0.88);
+    font-style: italic;
+  }
+  .intro-text em {
+    font-style: normal;
+    color: var(--gold-light);
+    font-weight: 400;
+  }
+
+  /* ── PROMISE CARDS ── */
+  .promise-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .promise-card {
+    background: linear-gradient(135deg, rgba(201,168,76,0.06) 0%, rgba(201,168,76,0.02) 100%);
+    border: 1px solid rgba(201,168,76,0.18);
+    padding: 18px 16px;
+    position: relative;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .promise-card:hover {
+    border-color: rgba(201,168,76,0.45);
+    transform: translateY(-2px);
+  }
+  .promise-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: linear-gradient(180deg, var(--gold), transparent);
+  }
+  .promise-card-icon {
+    font-size: 22px;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .promise-card-text {
+    font-size: 15px;
+    line-height: 1.55;
+    color: rgba(244,234,213,0.8);
+  }
+
+  /* ── VENUE BLOCK ── */
+  .venue-block {
+    background: linear-gradient(135deg, rgba(139,26,26,0.08) 0%, rgba(201,168,76,0.04) 100%);
+    border: 1px solid rgba(139,26,26,0.3);
+    padding: 24px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .venue-block::after {
+    content: '⚔';
+    position: absolute;
+    bottom: -8px; right: 16px;
+    font-size: 80px;
+    opacity: 0.04;
+    color: var(--gold);
+    transform: rotate(15deg);
+  }
+  .venue-name {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gold-light);
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+  }
+  .venue-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .venue-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 16px;
+    color: rgba(244,234,213,0.82);
+    line-height: 1.4;
+  }
+  .venue-list li::before {
+    content: '◈';
+    color: var(--gold);
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-size: 12px;
+  }
+
+  /* ── PLAYER TYPES ── */
+  .player-types {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .player-type {
+    border: 1px solid rgba(201,168,76,0.15);
+    padding: 20px 18px;
+    text-align: center;
+    position: relative;
+    transition: all 0.3s;
+    background: rgba(201,168,76,0.03);
+  }
+  .player-type:hover {
+    background: rgba(201,168,76,0.07);
+    border-color: rgba(201,168,76,0.35);
+  }
+  .player-type-label {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  .player-type-desc {
+    font-size: 15px;
+    line-height: 1.55;
+    color: rgba(244,234,213,0.78);
+    font-style: italic;
+  }
+
+  /* ── STATS ROW ── */
+  .stats-row {
+    display: flex;
+    justify-content: space-around;
+    gap: 8px;
+    padding: 28px 0 4px;
+    border-top: 1px solid rgba(201,168,76,0.15);
+  }
+  .stat {
+    text-align: center;
+    flex: 1;
+  }
+  .stat-value {
+    font-family: 'Cinzel', serif;
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--gold);
+    display: block;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+  }
+  .stat-sep {
+    width: 1px;
+    background: rgba(201,168,76,0.2);
+    align-self: stretch;
+  }
+
+  /* ── CTA ── */
+  .cta-block {
+    text-align: center;
+    padding: 40px 0 0;
+  }
+  .cta-text {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 20px;
+  }
+  .cta-btn {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    padding: 14px 36px;
+    text-decoration: none;
+    transition: all 0.3s;
+    position: relative;
+    cursor: pointer;
+    border: none;
+  }
+  .cta-btn:hover {
+    background: linear-gradient(135deg, #fff5c0, var(--gold-light));
+    letter-spacing: 5px;
+    box-shadow: 0 0 30px rgba(201,168,76,0.4);
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center;
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(201,168,76,0.1);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(201,168,76,0.3);
+    font-family: 'Cinzel', serif;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes rotateSlow {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  @keyframes flicker {
+    0%, 92%, 100% { opacity: 1; }
+    94% { opacity: 0.8; }
+    96% { opacity: 1; }
+    98% { opacity: 0.75; }
+  }
+
+  .name { animation: flicker 8s ease-in-out infinite; }
+
+  @media (max-width: 500px) {
+    .promise-cards, .player-types { grid-template-columns: 1fr; }
+    .stats-row { flex-wrap: wrap; }
+    .stat-sep { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="starfield"></div>
+<div class="page-frame"></div>
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="role-badge">Мастер Игры</div>
+
+    <div class="avatar-ring">
+      <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="60" r="56" stroke="url(#ringGrad)" stroke-width="0.5" stroke-dasharray="4 6"/>
+        <circle cx="60" cy="60" r="50" stroke="rgba(201,168,76,0.3)" stroke-width="0.5"/>
+        <!-- rune marks -->
+        <circle cx="60" cy="4" r="2.5" fill="#c9a84c" opacity="0.7"/>
+        <circle cx="60" cy="116" r="2.5" fill="#c9a84c" opacity="0.7"/>
+        <circle cx="4" cy="60" r="2.5" fill="#c9a84c" opacity="0.7"/>
+        <circle cx="116" cy="60" r="2.5" fill="#c9a84c" opacity="0.7"/>
+        <circle cx="17.6" cy="17.6" r="1.8" fill="#c9a84c" opacity="0.4"/>
+        <circle cx="102.4" cy="17.6" r="1.8" fill="#c9a84c" opacity="0.4"/>
+        <circle cx="17.6" cy="102.4" r="1.8" fill="#c9a84c" opacity="0.4"/>
+        <circle cx="102.4" cy="102.4" r="1.8" fill="#c9a84c" opacity="0.4"/>
+        <defs>
+          <linearGradient id="ringGrad" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#c9a84c" stop-opacity="0.8"/>
+            <stop offset="50%" stop-color="#7a6030" stop-opacity="0.4"/>
+            <stop offset="100%" stop-color="#c9a84c" stop-opacity="0.8"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="avatar-inner">🎲</div>
+    </div>
+
+    <h1 class="name">ДАНЯ</h1>
+    <p class="name-sub">Dungeon Master · D&amp;D и не только</p>
+  </header>
+
+  <!-- ABOUT -->
+  <section class="section">
+    <h2 class="section-title">✦ Об авторе</h2>
+    <p class="intro-text">
+      Привет! Я вожу по D&amp;D и не только — и мои кампании — это
+      <em>живая история</em>, в которой у каждого есть шанс стать легендой.
+      Ты не будешь просто «ещё одним приключенцем». У тебя будет
+      <em>свой момент</em>, свои эмоции, свои победы и поражения.
+    </p>
+  </section>
+
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-icon">⚔ ✦ ⚔</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- PROMISES -->
+  <section class="section">
+    <h2 class="section-title">✦ Что тебя ждёт</h2>
+    <div class="promise-cards">
+      <div class="promise-card">
+        <span class="promise-card-icon">🎭</span>
+        <p class="promise-card-text">Живая история, где каждое решение имеет вес и меняет мир</p>
+      </div>
+      <div class="promise-card">
+        <span class="promise-card-icon">⚔️</span>
+        <p class="promise-card-text">Группы до 5 человек — каждый получит своё внимание и влияние</p>
+      </div>
+      <div class="promise-card">
+        <span class="promise-card-icon">🌟</span>
+        <p class="promise-card-text">Твой момент, твои победы и поражения — не статистом, а героем</p>
+      </div>
+      <div class="promise-card">
+        <span class="promise-card-icon">🧙</span>
+        <p class="promise-card-text">Испытания, которые удивят даже опытных игроков</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-icon">◆</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- VENUE -->
+  <section class="section">
+    <h2 class="section-title">✦ Место проведения</h2>
+    <div class="venue-block">
+      <div class="venue-name">Клуб «Переулок D20»</div>
+      <ul class="venue-list">
+        <li>Отдельные комнаты с удобной планировкой</li>
+        <li>Игровой стол с экраном для карт и артов</li>
+        <li>Качественный звук и освещение для атмосферы</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-icon">◆</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- PLAYER TYPES -->
+  <section class="section">
+    <h2 class="section-title">✦ Для кого</h2>
+    <div class="player-types">
+      <div class="player-type">
+        <div class="player-type-label">🌱 Новичок</div>
+        <p class="player-type-desc">Помогу разобраться в правилах и вжиться в роль с нуля</p>
+      </div>
+      <div class="player-type">
+        <div class="player-type-label">🔥 Ветеран</div>
+        <p class="player-type-desc">Подкину испытания, которые тебя удивят и запомнятся надолго</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat">
+      <span class="stat-value">5</span>
+      <span class="stat-label">макс. игроков</span>
+    </div>
+    <div class="stat-sep"></div>
+    <div class="stat">
+      <span class="stat-value">D&D</span>
+      <span class="stat-label">и не только</span>
+    </div>
+    <div class="stat-sep"></div>
+    <div class="stat">
+      <span class="stat-value">∞</span>
+      <span class="stat-label">историй</span>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-block">
+    <p class="cta-text">Готов к приключению?</p>
+    <button class="cta-btn">Написать Мастеру</button>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    Переулок D20 · Даня · Мастер Игры
+  </footer>
+
+</div>
+
+</body>
+</html>
