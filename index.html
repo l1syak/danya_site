@@ -54,24 +54,6 @@
       radial-gradient(1px 1px at 25% 50%, rgba(200,160,255,0.5) 0%, transparent 100%);
   }
 
-  /* Decorative border frame */
-  .page-frame {
-    position: fixed;
-    inset: 16px;
-    border: 1px solid rgba(192,132,245,0.2);
-    pointer-events: none;
-    z-index: 10;
-  }
-  .page-frame::before, .page-frame::after {
-    content: '✦';
-    position: absolute;
-    font-size: 18px;
-    color: var(--gold);
-    opacity: 0.5;
-  }
-  .page-frame::before { top: -10px; left: 50%; transform: translateX(-50%); }
-  .page-frame::after  { bottom: -10px; left: 50%; transform: translateX(-50%); }
-
   /* Main wrapper */
   .wrapper {
     position: relative;
